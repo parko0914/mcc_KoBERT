@@ -60,4 +60,26 @@ from transformers.optimization import get_cosine_schedule_with_warmup
 bertmodel, vocab = get_pytorch_kobert_model()
 ```
 
+### 1. text cleaning
+([pyhanspell 원문](https://hong-yp-ml-records.tistory.com/99))
+* 네이버 맞춤법 교정기 기반 라이브러리인 pyhanspell 을 이용
+* 모든 데이터를 교정기를 통해 맞춤법을 교정
+* 형태소 처리를 하지 않은 이유 : BERT 모델의 경우 문장의 앞뒤 문맥까지 파악하여 고려해주기 때문에 형태소로 분리하지 않고, 맞춤법 교정을 통해 더 정확한 데이터로 train 하기 
+
+```python
+# 맞춤법 교정 함수
+def comment_clean_t(data):
+    comment = data['clean']
+    comment_list = []
+    for i in tqdm(range(len(comment))):    
+        try:
+            # 특정 특수문자 삭제
+            sent = comment[i]
+
+            hanspell_sent = spell_checker.check(sent).checked
+            comment_list.append(hanspell_sent)
+        except:
+            comment_list.append(sent)
+    return comment_list
+```
 
