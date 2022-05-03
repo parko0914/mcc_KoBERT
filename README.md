@@ -22,8 +22,16 @@
 * 모든 데이터를 교정기를 통해 맞춤법을 교정
 * 형태소 처리를 하지 않은 이유 : BERT 모델의 경우 문장의 앞뒤 문맥까지 파악하여 고려해주기 때문에 형태소로 분리하지 않고, 맞춤법 교정을 통해 더 정확한 데이터로 train 하기 위함
 
+#### 환경 구축
 ```python
-# 맞춤법 교정 함수
+!pip install git+https://github.com/ssut/py-hanspell.git
+from hanspell import spell_checker
+from tqdm import tqdm
+import pandas as pd
+```
+
+#### 맞춤법 교정 함수
+```python
 def comment_clean_t(data):
     comment = data['clean']
     comment_list = []
