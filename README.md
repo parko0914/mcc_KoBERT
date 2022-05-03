@@ -120,7 +120,7 @@ sample_d = pd.concat([train_d[['label_s', 'clean_done']], aug_d1, aug_d2, aug_d3
 ### 3. create Multi-class classification model(KoBERT)
 * 전처리한 텍스트 데이터를 KoBERT 모델에 적용
 
-##### train & test set 나누기
+#### train & test set 나누기
 ```python
 from sklearn.model_selection import train_test_split
 # stratify 를 target으로 지정해 비율을 맞춤으로써, 성능향상 가능
@@ -131,6 +131,7 @@ dataset_train = [[str(a), str(b)] for a, b in zip(dataset_train, y_train)]
 dataset_test = [[str(a), str(b)] for a, b in zip(dataset_test, y_test)]
 ```
 
+#### KoBERT model 환경, 데이터 맞춰주기
 ```python
 # KoBERT 입력 데이터로 만들기
 # BERT 모델에 들어가기 위한 dataset을 만들어주는 클래스
@@ -173,6 +174,7 @@ train_dataloader = torch.utils.data.DataLoader(data_train, batch_size=batch_size
 test_dataloader = torch.utils.data.DataLoader(data_test, batch_size=batch_size, num_workers=4)
 ```
 
+#### KoBERT model 환경, 데이터 맞춰주기
 ```python
 # 클래스 수 조정
 print(len(y_dict))
@@ -206,9 +208,7 @@ class BERTClassifier(nn.Module):
         if self.dr_rate:
             out = self.dropout(pooler)
         return self.classifier(out)
-```
-
-```python
+        
 # model 선언 -> dr_rate : learning rate
 model = BERTClassifier(bertmodel, dr_rate=0.5).to(device)
 
@@ -237,7 +237,8 @@ def calc_accuracy(X,Y):
     return train_acc
 ```
 
-최종 모델 학습
+
+#### 최종 모델 학습
 ```python 
 highest_acc = 0
 patience = 0
@@ -294,3 +295,8 @@ for e in range(num_epochs):
     print('current patience: {}'.format(patience))
     print("************************************************************************************")
 ```
+
+#### 정확도 및 f1 score 도출
+```python
+```
+
