@@ -7,7 +7,9 @@
 ### 분석 환경 및 성과
 - 구축 모델 : KoBERT ([SKTBrain](https://github.com/SKTBrain/KoBERT))
 - 구동환경 : google colab (pro 버젼)
-- 약 500 여 팀 중 37위로 마감 (최종 accuracy : 89.8, f1-score(macro) : 76.44)
+- 약 500 여 팀 중 37위로 마감 (최종 accuracy : 89.99, f1-score(macro) : 74.58)
+![image](https://user-images.githubusercontent.com/91238910/167256642-05ed18c5-6cad-42c0-9c38-35bf0dd7a6bf.png)
+
 
 ### 모델 구축 프로세스 
 (포토샵 이용해서 구축 프로세스 시각화)
