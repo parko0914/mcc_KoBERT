@@ -306,5 +306,124 @@ for e in range(num_epochs):
 
 #### 정확도 및 f1 score 도출
 ```python
+# test 하기전 모델 기본 값 불러오기
+
+# KoBERT 입력 데이터로 만들기
+# BERT 모델에 들어가기 위한 dataset을 만들어주는 클래스
+class BERTDataset(Dataset):
+    def __init__(self, dataset, sent_idx, label_idx, bert_tokenizer, max_len,
+                 pad, pair):
+        transform = nlp.data.BERTSentenceTransform(
+            bert_tokenizer, max_seq_length=max_len, pad=pad, pair=pair)
+
+        self.sentences = [transform([i[sent_idx]]) for i in dataset]
+        self.labels = [np.int32(i[label_idx]) for i in dataset]
+
+    def __getitem__(self, i):
+        return (self.sentences[i] + (self.labels[i], ))
+
+    def __len__(self):
+        return (len(self.labels))
+
+# 토큰화 실행
+tokenizer = get_tokenizer()
+tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
+
+# KoBERT 학습모델 만들기
+class BERTClassifier(nn.Module):
+    def __init__(self,
+                 bert,
+                 hidden_size = 768,
+                 num_classes=225,   ##클래스 수 조정해줘야함##
+                 dr_rate=None,
+                 params=None):
+        super(BERTClassifier, self).__init__()
+        self.bert = bert
+        self.dr_rate = dr_rate
+                 
+        self.classifier = nn.Linear(hidden_size , num_classes)
+        if dr_rate:
+            self.dropout = nn.Dropout(p=dr_rate)
+    
+    def gen_attention_mask(self, token_ids, valid_length):
+        attention_mask = torch.zeros_like(token_ids)
+        for i, v in enumerate(valid_length):
+            attention_mask[i][:v] = 1
+        return attention_mask.float()
+
+    def forward(self, token_ids, valid_length, segment_ids):
+        attention_mask = self.gen_attention_mask(token_ids, valid_length)
+        
+        _, pooler = self.bert(input_ids = token_ids, token_type_ids = segment_ids.long(), attention_mask = attention_mask.float().to(token_ids.device))
+        if self.dr_rate:
+            out = self.dropout(pooler)
+        return self.classifier(out)
+
+# Setting parameters
+# 이건 나중에 최적화 값 찾아봐야할 듯
+max_len = 64
+batch_size = 128
+warmup_ratio = 0.1
+num_epochs = 5
+max_grad_norm = 1
+log_interval = 200
+learning_rate = 5e-5 # 0.0001 # 
+
+
+model = BERTClassifier(bertmodel, dr_rate=0.5).to(device)
+# Prepare optimizer and schedule (linear warmup and decay)
+no_decay = ['bias', 'LayerNorm.weight']
+optimizer_grouped_parameters = [
+    {'params': [p for n, p in model.named_parameters() if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+    {'params': [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+]
+optimizer = AdamW(optimizer_grouped_parameters, lr=learning_rate)
+
+checkpoint = torch.load(path + 'final_data/' + 'correct_model_fin.pt')
+model.load_state_dict(checkpoint['model_state_dict'])
+optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+epoch = checkpoint['epoch']
+loss = checkpoint['loss']
+
+# 불러온 모델 평가 모드 실행
+model.eval()
+```
+
+```python
+from tqdm.notebook import tqdm
+
+# 예측 함수 생성
+def predict_set(dataset_test):
+
+    test_acc = 0.0
+
+    tokenizer = get_tokenizer()
+    tok = nlp.data.BERTSPTokenizer(tokenizer, vocab, lower=False)
+
+    data_test = BERTDataset(dataset_test, 0, 1, tok, max_len, True, False)
+
+    test_dataloader = torch.utils.data.DataLoader(data_test, batch_size=batch_size, num_workers=4)
+
+    out_list =[]
+
+    for batch_id, (token_ids, valid_length, segment_ids, label) in enumerate(tqdm(test_dataloader)):
+        token_ids = token_ids.long().to(device)
+        segment_ids = segment_ids.long().to(device)
+
+        valid_length= valid_length
+        label = label.long().to(device)
+
+        out = model(token_ids, valid_length, segment_ids)
+        output = out.detach().cpu().tolist()
+        out_list.append(output)
+
+    pd = sum(out_list,[])
+    pd_list = pd_list = [np.argmax(i) for i in pd]
+    return pd_list
+```
+
+```python
+dataset_test = [[str(a), '0'] for a in test['clean_done']]
+p_test = predict_set(dataset_test)
 ```
 
