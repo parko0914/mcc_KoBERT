@@ -13,7 +13,7 @@
 
 
 ### 모델 구축 프로세스 
-(포토샵 이용해서 구축 프로세스 시각화)
+![git_kobert](https://user-images.githubusercontent.com/91238910/182099435-6749f272-fa51-4e43-98a2-342c480e14ae.png)
 1. 텍스트 데이터 전처리 (py-hanspell) 
 2. 불균형 문제 해결 (text-aumentation)
 3. 학습 데이터 분할 후, 모델 학습 (Kobert)
